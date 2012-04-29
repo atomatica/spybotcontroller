@@ -6,7 +6,34 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-public class Spybotcontroller extends JFrame {
+public class Spybotcontroller extends JApplet {
+    SpybotcontrollerUI ui;
+
+    public void init() {
+        ui = new SpybotcontrollerUI("atomatica.com");
+        ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        Container container=getContentPane();
+        container.setLayout(new GridLayout());
+        container.add(ui);
+    }
+
+    public void start() {
+        ui.start();
+    }
+
+    public void stop() {
+        ui.stop();
+    }
+
+    public void destroy() {
+
+    }
+}
+
+class SpybotcontrollerUI extends JFrame implements Runnable {
+    private Thread ui;
+    
     private JTextField enterField;
     private JTextArea displayArea;
     private ObjectOutputStream output;
@@ -15,12 +42,9 @@ public class Spybotcontroller extends JFrame {
     private String chatServer;
     private Socket client;
 
-    // initialize chatServer and set up GUI
-    public Spybotcontroller(String host) {
+    public SpybotcontrollerUI(String host) {
         super("Client");
-
-        chatServer = host; // set server to which this client connects
-
+        chatServer = host;
         Container container = getContentPane();
 
         // create enterField and register listener
@@ -43,11 +67,18 @@ public class Spybotcontroller extends JFrame {
 
         setSize(300, 150);
         setVisible(true);
-
-    } // end Client constructor
+    }
+    
+    public void start() {
+        // create thread
+        if (ui == null) {
+            ui = new Thread(this);
+            ui.start();
+        }
+    }
 
     // connect to server and process messages from server
-    private void runClient() {
+    public void run() {
         // connect to server, get streams, process connection
         try {
             connectToServer(); // Step 1: Create a Socket to make connection
@@ -61,18 +92,25 @@ public class Spybotcontroller extends JFrame {
         }
 
         // process problems communicating with server
-        catch (IOException ioException) {
-            ioException.printStackTrace();
+        catch (IOException e) {
+            e.printStackTrace();
         }
 
         finally {
             closeConnection(); // Step 4: Close connection
         }
-    } // end method runClient
+    }
+    
+    // clear thread
+    public void stop() {
+        if ((ui != null) && ui.isAlive()) {
+            ui = null;
+        }
+    }
 
     // connect to server
     private void connectToServer() throws IOException {
-        displayMessage("Attempting connection\n");
+        displayMessage("Attempting connection");
 
         // create Socket to make connection to server
         client = new Socket(InetAddress.getByName(chatServer), 9103);
@@ -90,7 +128,7 @@ public class Spybotcontroller extends JFrame {
         // set up input stream for objects
         input = new ObjectInputStream(client.getInputStream());
 
-        displayMessage("\nGot I/O streams\n");
+        displayMessage("Got I/O streams");
     }
 
     // process connection with server
@@ -98,8 +136,7 @@ public class Spybotcontroller extends JFrame {
         // enable enterField so client user can send messages
         setTextFieldEditable(true);
 
-        do { // process messages sent from server
-
+        do {
             // read message and display it
             try {
                 message = (String) input.readObject();
@@ -111,14 +148,14 @@ public class Spybotcontroller extends JFrame {
                 displayMessage("\nUnknown object type received");
             }
 
-        } while (!message.equals("SERVER>>> TERMINATE"));
+        } while (!message.equals("TERMINATE"));
 
     } // end method processConnection
 
     // close streams and socket
     private void closeConnection() {
-        displayMessage("\nClosing connection");
-        setTextFieldEditable(false); // disable enterField
+        displayMessage("Closing connection");
+        setTextFieldEditable(false);
 
         try {
             output.close();
@@ -133,14 +170,14 @@ public class Spybotcontroller extends JFrame {
     private void sendData(String message) {
         // send object to server
         try {
-            output.writeObject("CLIENT>>> " + message);
+            output.writeObject(message);
             output.flush();
-            displayMessage("\nCLIENT>>> " + message);
+            displayMessage("Client> " + message);
         }
 
         // process problems sending object
         catch (IOException ioException) {
-            displayArea.append("\nError writing object");
+            displayArea.append("Error writing object");
         }
     }
 
@@ -170,17 +207,5 @@ public class Spybotcontroller extends JFrame {
                     }
                 } // end inner class
                 ); // end call to SwingUtilities.invokeLater
-    }
-
-    public static void main(String args[]) {
-        Spybotcontroller application;
-
-        if (args.length == 0)
-            application = new Spybotcontroller("atomatica.com");
-        else
-            application = new Spybotcontroller(args[0]);
-
-        application.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        application.runClient();
     }
 }
