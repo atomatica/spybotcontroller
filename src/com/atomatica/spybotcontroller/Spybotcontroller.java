@@ -11,7 +11,6 @@ public class Spybotcontroller extends JApplet {
 
     public void init() {
         ui = new SpybotcontrollerUI("atomatica.com");
-        ui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         Container container=getContentPane();
         container.setLayout(new GridLayout());
@@ -31,7 +30,7 @@ public class Spybotcontroller extends JApplet {
     }
 }
 
-class SpybotcontrollerUI extends JFrame implements Runnable {
+class SpybotcontrollerUI extends JPanel implements Runnable {
     private Thread ui;
     
     private JTextField enterField;
@@ -43,9 +42,7 @@ class SpybotcontrollerUI extends JFrame implements Runnable {
     private Socket client;
 
     public SpybotcontrollerUI(String host) {
-        super("Client");
         chatServer = host;
-        Container container = getContentPane();
 
         // create enterField and register listener
         enterField = new JTextField();
@@ -59,11 +56,11 @@ class SpybotcontrollerUI extends JFrame implements Runnable {
             }
         });
 
-        container.add(enterField, BorderLayout.NORTH);
+        this.add(enterField, BorderLayout.NORTH);
 
         // create displayArea
         displayArea = new JTextArea();
-        container.add(new JScrollPane(displayArea), BorderLayout.CENTER);
+        this.add(new JScrollPane(displayArea), BorderLayout.CENTER);
 
         setSize(300, 150);
         setVisible(true);
