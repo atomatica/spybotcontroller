@@ -7,22 +7,22 @@ import java.awt.event.*;
 import javax.swing.*;
 
 public class Spybotcontroller extends JApplet {
-    SpybotcontrollerUI ui;
+    ControlPanel controlPanel;
 
     public void init() {
-        ui = new SpybotcontrollerUI("atomatica.com");
+        controlPanel = new ControlPanel("atomatica.com");
 
         Container container=getContentPane();
         container.setLayout(new GridLayout());
-        container.add(ui);
+        container.add(controlPanel);
     }
 
     public void start() {
-        ui.start();
+        controlPanel.start();
     }
 
     public void stop() {
-        ui.stop();
+        controlPanel.stop();
     }
 
     public void destroy() {
@@ -30,35 +30,32 @@ public class Spybotcontroller extends JApplet {
     }
 }
 
-class SpybotcontrollerUI extends JPanel implements Runnable {
-    private Thread ui;
+class ControlPanel extends JPanel implements Runnable {
+    private Thread thread;
     
     private JTextField enterField;
     private JTextArea displayArea;
-    private ObjectOutputStream output;
-    private ObjectInputStream input;
-    private String message = "";
-    private String chatServer;
-    private Socket client;
 
-    public SpybotcontrollerUI(String host) {
+    private String chatServer;
+    
+    private Socket client;
+    private ObjectInputStream input;
+    private ObjectOutputStream output;
+    private String message = "";
+
+    public ControlPanel(String host) {
         chatServer = host;
 
-        // create enterField and register listener
+        setLayout(new BorderLayout(5, 5));
         enterField = new JTextField();
         enterField.setEditable(false);
         enterField.addActionListener(new ActionListener() {
-
-            // send message to server
             public void actionPerformed(ActionEvent event) {
                 sendData(event.getActionCommand());
                 enterField.setText("");
             }
         });
-
-        this.add(enterField, BorderLayout.NORTH);
-
-        // create displayArea
+        add(enterField, BorderLayout.NORTH);
         displayArea = new JTextArea();
         this.add(new JScrollPane(displayArea), BorderLayout.CENTER);
 
@@ -67,142 +64,106 @@ class SpybotcontrollerUI extends JPanel implements Runnable {
     }
     
     public void start() {
-        // create thread
-        if (ui == null) {
-            ui = new Thread(this);
-            ui.start();
+        if (thread == null) {
+            thread = new Thread(this);
+            thread.start();
         }
     }
 
-    // connect to server and process messages from server
     public void run() {
-        // connect to server, get streams, process connection
         try {
-            connectToServer(); // Step 1: Create a Socket to make connection
-            getStreams(); // Step 2: Get the input and output streams
-            processConnection(); // Step 3: Process connection
+            connectToServer();
+            getStreams();
+            processConnection();
         }
 
-        // server closed connection
-        catch (EOFException eofException) {
-            System.err.println("Client terminated connection");
+        catch (EOFException e) {
+            System.err.println("Server terminated connection");
         }
 
-        // process problems communicating with server
         catch (IOException e) {
             e.printStackTrace();
         }
 
         finally {
-            closeConnection(); // Step 4: Close connection
+            closeConnection();
         }
     }
     
-    // clear thread
     public void stop() {
-        if ((ui != null) && ui.isAlive()) {
-            ui = null;
+        if ((thread != null) && thread.isAlive()) {
+            thread = null;
         }
     }
 
-    // connect to server
     private void connectToServer() throws IOException {
-        displayMessage("Attempting connection");
-
-        // create Socket to make connection to server
+        displayMessage("Attempting connection\n");
         client = new Socket(InetAddress.getByName(chatServer), 9103);
-
-        // display connection information
-        displayMessage("Connected to: " + client.getInetAddress().getHostName());
+        displayMessage("Connected to: " + client.getInetAddress().getHostName() + "\n");
     }
 
-    // get streams to send and receive data
     private void getStreams() throws IOException {
-        // set up output stream for objects
         output = new ObjectOutputStream(client.getOutputStream());
-        output.flush(); // flush output buffer to send header information
-
-        // set up input stream for objects
+        output.flush();
         input = new ObjectInputStream(client.getInputStream());
-
-        displayMessage("Got I/O streams");
+        displayMessage("Got I/O streams\n");
     }
 
-    // process connection with server
     private void processConnection() throws IOException {
-        // enable enterField so client user can send messages
         setTextFieldEditable(true);
 
         do {
-            // read message and display it
             try {
-                message = (String) input.readObject();
-                displayMessage("\n" + message);
+                message = (String)input.readObject();
+                displayMessage("Server> " + message + "\n");
             }
 
-            // catch problems reading from server
             catch (ClassNotFoundException classNotFoundException) {
-                displayMessage("\nUnknown object type received");
+                System.err.println("Unknown object type received");
             }
 
         } while (!message.equals("TERMINATE"));
+    }
 
-    } // end method processConnection
-
-    // close streams and socket
     private void closeConnection() {
-        displayMessage("Closing connection");
+        displayMessage("Closing connection\n");
         setTextFieldEditable(false);
 
         try {
             output.close();
             input.close();
             client.close();
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    // send message to server
     private void sendData(String message) {
-        // send object to server
         try {
             output.writeObject(message);
             output.flush();
-            displayMessage("Client> " + message);
+            displayMessage("Client> " + message + "\n");
         }
 
-        // process problems sending object
-        catch (IOException ioException) {
-            displayArea.append("Error writing object");
+        catch (IOException e) {
+            System.err.println("Error writing object");
         }
     }
 
-    // utility method called from other threads to manipulate
-    // displayArea in the event-dispatch thread
-    private void displayMessage(final String messageToDisplay) {
-        // display message from GUI thread of execution
+    private void displayMessage(final String message) {
         SwingUtilities.invokeLater(new Runnable() {
-                    public void run() // updates displayArea
-                    {
-                        displayArea.append(messageToDisplay);
-                        displayArea.setCaretPosition(displayArea.getText()
-                                .length());
-                    }
-                } // end inner class
-                ); // end call to SwingUtilities.invokeLater
+            public void run(){
+                displayArea.append(message);
+                displayArea.setCaretPosition(displayArea.getText().length());
+            }
+        });
     }
 
-    // utility method called from other threads to manipulate
-    // enterField in the event-dispatch thread
     private void setTextFieldEditable(final boolean editable) {
-        // display message from GUI thread of execution
         SwingUtilities.invokeLater(new Runnable() {
-                    public void run() // sets enterField's editability
-                    {
-                        enterField.setEditable(editable);
-                    }
-                } // end inner class
-                ); // end call to SwingUtilities.invokeLater
+            public void run() {
+                enterField.setEditable(editable);
+            }
+        });
     }
 }
