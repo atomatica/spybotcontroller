@@ -39,8 +39,8 @@ class ControlPanel extends JPanel implements Runnable {
     private String chatServer;
     
     private Socket client;
-    private ObjectInputStream input;
-    private ObjectOutputStream output;
+    protected BufferedReader input;
+    protected PrintWriter output;
     private String message = "";
 
     public ControlPanel(String host) {
@@ -103,25 +103,16 @@ class ControlPanel extends JPanel implements Runnable {
     }
 
     private void getStreams() throws IOException {
-        output = new ObjectOutputStream(client.getOutputStream());
-        output.flush();
-        input = new ObjectInputStream(client.getInputStream());
-        displayMessage("Got I/O streams\n");
+        output = new PrintWriter(client.getOutputStream(), true);
+        input = new BufferedReader(new InputStreamReader(client.getInputStream()));
     }
 
     private void processConnection() throws IOException {
         setTextFieldEditable(true);
 
         do {
-            try {
-                message = (String)input.readObject();
-                displayMessage("Server> " + message + "\n");
-            }
-
-            catch (ClassNotFoundException classNotFoundException) {
-                System.err.println("Unknown object type received");
-            }
-
+            message = input.readLine();
+            displayMessage("Server> " + message + "\n");
         } while (!message.equals("TERMINATE"));
     }
 
@@ -139,15 +130,9 @@ class ControlPanel extends JPanel implements Runnable {
     }
 
     private void sendData(String message) {
-        try {
-            output.writeObject(message);
-            output.flush();
-            displayMessage("Client> " + message + "\n");
-        }
-
-        catch (IOException e) {
-            System.err.println("Error writing object");
-        }
+        output.println(message);
+        output.flush();
+        displayMessage("Client> " + message + "\n");
     }
 
     private void displayMessage(final String message) {
