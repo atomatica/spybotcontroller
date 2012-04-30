@@ -78,7 +78,7 @@ class ControlPanel extends JPanel implements Runnable {
         }
 
         catch (EOFException e) {
-            System.err.println("Server terminated connection");
+            displayMessage("Server terminated connection\n");
         }
 
         catch (IOException e) {
