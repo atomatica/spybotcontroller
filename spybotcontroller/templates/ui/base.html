@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+    <head>
+        <meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=no;" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <title>Spybot Controller</title>
+        <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery.mobile-1.1.0-rc.1.min.css" />
+        <link rel="stylesheet" href="{{ STATIC_URL }}css/base.css" />
+        <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.7.1.min.js"></script>
+        <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.mobile-1.1.0-rc.1.min.js"></script>
+        <script>
+            $(document).on('pageinit', function() {
+                $("#camera-tilt").on("change", function() {
+                    $.ajax({url: "{{ SITE_URL }}cmd/tilt/" + $("#camera-tilt").val()});
+                });
+            });
+            
+            function localcmd(cmd) {
+                $.ajax({url: "{{ SPYBOT_URL }}" + cmd});
+            }
+            
+            function remotecmd(cmd) {
+                $.ajax({url: "{{ SITE_URL }}cmd/" + cmd});
+            }
+        </script>
+    </head>
+    <body>
+        <div data-role="page">
+            <div data-role="header" data-position="fixed">
+                <a href="/spybot" data-icon="home" data-iconpos="notext" data-theme="b" ></a>
+                <h1>Spybot</h1>
+            </div><!-- /header -->
+            <div data-role="content">
+                {% block content %}{% endblock %}
+            </div><!-- /content -->
+            <div class="footer" data-role="footer" data-position="fixed">
+                <div data-role="navbar" data-iconpos="bottom">
+                    <ul>
+                        <li><a href="#" onclick="remotecmd('left')" data-icon="arrow-l">Turn Left</a></li>
+                        <li><a href="#" onclick="remotecmd('forward')" data-icon="arrow-u">Forward</a></li>
+                        <li><a href="#" onclick="remotecmd('stop')" data-icon="delete">Stop</a></li>
+                        <li><a href="#" onclick="remotecmd('reverse')" data-icon="arrow-d">Reverse</a></li>
+                        <li><a href="#" onclick="remotecmd('right')" data-icon="arrow-r">Turn Right</a></li>
+                    </ul>
+                </div>
+                <div data-role="navbar">
+                    <ul>
+                        <li><a href="#" onclick="localcmd('enabletorch')">LED On</a></li>
+                        <li><a href="#" onclick="localcmd('disabletorch')">LED Off</a></li>
+                        <li><a href="#" onclick="localcmd('focus')">Focus</a></li>
+                    </ul>
+                </div>
+            </div><!-- /footer -->
+        </div><!-- /page -->
+    </body>
+</html>

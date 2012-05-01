@@ -1,0 +1,9 @@
+{% extends "ui/base.html" %}
+
+{% block content %}
+                <div class="center">
+                    <img id="videofeed" src="{{ SPYBOT_URL }}videofeed" alt="Video feed"/>
+                    <label id="camera-tilt-label" for="camera-tilt">Camera Tilt:</label>
+                    <input type="range" name="camera-tilt" id="camera-tilt" value="135" min="10" max="180" step="5" />
+                </div>
+{% endblock %}

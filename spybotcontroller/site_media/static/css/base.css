@@ -29,7 +29,7 @@ h6 { font-size: 14px; font-weight: bold; line-height: 1.28; margin: 6px 0; }
 }
 
 .footer {
-    padding: 10px 0;
+    /*padding: 10px 0;*/
 }
 
 .footer-text {
@@ -56,4 +56,20 @@ h6 { font-size: 14px; font-weight: bold; line-height: 1.28; margin: 6px 0; }
 
 .footer-links img {
     margin: 2px 2px -2px 2px;
+}
+
+.center {
+    margin:0 auto !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    text-align:center !important;
+}
+
+#camera-tilt-label {
+    font-size: 12px;
+}
+
+#videofeed {
+    height: 480px;
+    width: 360px;
 }
