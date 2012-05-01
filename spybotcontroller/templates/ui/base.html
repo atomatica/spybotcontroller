@@ -9,11 +9,60 @@
         <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.7.1.min.js"></script>
         <script type="text/javascript" src="{{ STATIC_URL }}js/jquery.mobile-1.1.0-rc.1.min.js"></script>
         <script>
+            var inMotion = false;
             $(document).on('pageinit', function() {
                 $("#camera-tilt").on("change", function() {
                     $.ajax({url: "{{ SITE_URL }}cmd/tilt/" + $("#camera-tilt").val()});
                 });
+                
+                $(document).keydown(function(event) {
+                    // w key pressed
+                    if (event.which == 87) {
+                        inMotion = true;
+                        $.ajax({url: "{{ SITE_URL }}cmd/forward"});
+                    }
+                    // a key pressed
+                    if (event.which == 65) {
+                        inMotion = true;
+                        $.ajax({url: "{{ SITE_URL }}cmd/left"});
+                    }
+                    // s key pressed
+                    if (event.which == 83) {
+                        inMotion = true;
+                        $.ajax({url: "{{ SITE_URL }}cmd/reverse"});
+                    }
+                    // d key pressed
+                    if (event.which == 68) {
+                        inMotion = true;
+                        $.ajax({url: "{{ SITE_URL }}cmd/right"});
+                    }
+                    
+                    // q key pressed
+                    if (event.which == 81) {
+                        var value = $("#camera-tilt").val();
+                        if (value >= 15) {
+                            $("#camera-tilt").val(value - 5);
+                        }
+                    }
+                    
+                    // e key pressed
+                    if (event.which == 69) {
+                        var value = $("#camera-tilt").val();
+                        if (value <= 175) {
+                            $("#camera-tilt").val(value + 5);
+                        }
+                    }
+                });
+                
+                $(document).keyup(function(event) {
+                    if (inMotion) {
+                        inMotion = false;
+                        $.ajax({url: "{{ SITE_URL }}cmd/stop"});
+                    }
+                    
+                });
             });
+            
             
             function localcmd(cmd) {
                 $.ajax({url: "{{ SPYBOT_URL }}" + cmd});
